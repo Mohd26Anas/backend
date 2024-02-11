@@ -4,6 +4,7 @@ import { asynHandler } from "../utils/asynHandler.js";
 import { uploadFile } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateRefreshAndAccessToken = async (userId) => {
   const user = await User.findById(userId);
@@ -231,6 +232,8 @@ const updateDetails = asynHandler(async (req, res) => {
 const getUserChaneel = asynHandler(async (req, res) => {
   const { username } = req.params;
 
+  console.log(username);
+
   if (!username?.trim()) {
     throw new ApiError(400, "username is required");
   }
@@ -253,7 +256,7 @@ const getUserChaneel = asynHandler(async (req, res) => {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
-        foreignField: "subscribers",
+        foreignField: "subscriber",
         as: "subscribedTo",
       },
     },
@@ -268,7 +271,7 @@ const getUserChaneel = asynHandler(async (req, res) => {
         isSubscribe: {
           $cond: {
             if: {
-              $in: [req.user?._id, "$subscribers.subscribers"],
+              $in: [req.user?._id, "$subscribers.subscriber"],
             },
             then: true,
             else: false,
@@ -276,6 +279,7 @@ const getUserChaneel = asynHandler(async (req, res) => {
         },
       },
     },
+
     {
       $project: {
         fullName: 1,
@@ -290,12 +294,14 @@ const getUserChaneel = asynHandler(async (req, res) => {
     },
   ]);
 
+  // console.log(await channel.explain("executionStats"));
+
   if (!channel?.length) {
     throw new ApiError(404, "Channel not found");
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, channel[0], "Channel found successfully"));
+    .json(new ApiResponse(200, "Channel found successfully", channel[0]));
 });
 
 const usersData = asynHandler(async (req, res) => {
@@ -317,6 +323,64 @@ const usersData = asynHandler(async (req, res) => {
   }
 });
 
+const watchHistory = asynHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req?.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    avatar: 1,
+                    fullName: 1,
+                    username: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+  res
+    .status(200)
+    .json(new ApiResponse(200, user[0].watchHistory, "Data fetch successful"));
+});
+
+const updateWatchHistory = asynHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { $addToSet: { watchHistory: videoId } },
+    { new: true }
+  );
+  res.status(200).json(new ApiResponse(200, "Video added to watch history"));
+});
+
 export {
   registerUser,
   login,
@@ -327,4 +391,6 @@ export {
   currentUser,
   getUserChaneel,
   usersData,
+  watchHistory,
+  updateWatchHistory,
 };
