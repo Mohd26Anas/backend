@@ -22,6 +22,7 @@ const uploadVideo = asynHandler(async (req, res) => {
     throw new ApiError(400, "Please upload an video image");
   }
   const videoUrl = await uploadFile(videoFile);
+  console.log(videoUrl);
 
   const video = await Video.create({
     videoFile: videoUrl?.url,

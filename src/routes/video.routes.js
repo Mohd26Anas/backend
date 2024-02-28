@@ -24,6 +24,7 @@ videoRouter.route("/upload").post(
       maxCount: 1,
     },
   ]),
+
   uploadVideo
 );
 videoRouter
