@@ -212,8 +212,6 @@ const linkPreview = async (req, res) => {
   }
 };
 
-export default linkPreview;
-
 const isYouTubeURL = (url) => {
   return url.includes("youtube.com") || url.includes("youtu.be");
 };

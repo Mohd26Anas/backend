@@ -14,6 +14,6 @@ tweetRouter.get("/get-tweet/:userId", verifyJWT, getUserTweets);
 tweetRouter.get("/get-all-tweets", verifyJWT, getAllTweets);
 tweetRouter.patch("/update-tweets/:id", verifyJWT, getAllTweets);
 tweetRouter.delete("/delete-tweets/:id", verifyJWT, getAllTweets);
-tweetRouter.post("/link-preview", linkPreview);
+tweetRouter.get("/link-preview", linkPreview);
 
 export default tweetRouter;
