@@ -4,6 +4,14 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const fileUploaderRoute = Router();
 
-fileUploaderRoute.route("/upload").post(uploadFileApi);
+fileUploaderRoute.route("/upload").post(
+  upload.fields([
+    {
+      name: "file",
+      maxCount: 1,
+    },
+  ]),
+  uploadFileApi
+);
 
 export default fileUploaderRoute;
