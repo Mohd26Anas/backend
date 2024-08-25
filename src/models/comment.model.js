@@ -4,15 +4,24 @@ const commentSchema = new Schema(
   {
     content: {
       type: String,
+      enum: ["VIDEO", "TWEET", "REPLY_COMMENT"],
+      required: true,
+    },
+    comment: {
+      type: String,
       required: true,
     },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    video: {
+    videoId: {
       type: Schema.Types.ObjectId,
       ref: "Video",
+    },
+    commentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment",
     },
   },
   { timestamps: true }

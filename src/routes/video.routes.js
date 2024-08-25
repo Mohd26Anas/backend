@@ -4,6 +4,7 @@ import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
   deleteVideo,
+  getLikeAndCommentOnVideos,
   getVideoById,
   togglePublished,
   updateVideo,
@@ -39,5 +40,8 @@ videoRouter
     updateVideo
   );
 videoRouter.route("/delete-video/:videoId").delete(verifyJWT, deleteVideo);
+videoRouter
+  .route("/get-like/:videoId")
+  .get(verifyJWT, getLikeAndCommentOnVideos);
 
 export default videoRouter;

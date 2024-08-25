@@ -1,4 +1,4 @@
-import { upload } from "../middlewares/multer.middleware.js";
+import mongoose from "mongoose";
 import { Video } from "../models/video.modal.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asynHandler } from "../utils/asynHandler.js";
@@ -110,4 +110,55 @@ const deleteVideo = asynHandler(async (req, res) => {
     .json(new ApiResponse(200, "Video deleted successfully", video));
 });
 
-export { uploadVideo, togglePublished, getVideoById, updateVideo, deleteVideo };
+const getLikeAndCommentOnVideos = asynHandler(async (req, res) => {
+  const { videoId } = req.params;
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiResponse(404, "Video not found");
+  }
+
+  const allLikeAndComment = await Video.aggregate([
+    {
+      $match: { _id: new mongoose.Types.ObjectId(videoId) },
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "video",
+        as: "comments",
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "contentId",
+        as: "likes",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        commentCount: { $size: "$comments" },
+        likeCount: { $size: "$likes" },
+      },
+    },
+  ]);
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Video found successfully", allLikeAndComment[0])
+    );
+});
+
+export {
+  uploadVideo,
+  togglePublished,
+  getVideoById,
+  updateVideo,
+  deleteVideo,
+  getLikeAndCommentOnVideos,
+};
